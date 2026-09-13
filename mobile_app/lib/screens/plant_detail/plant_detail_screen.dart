@@ -1,13 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/plant.dart';
+import '../../services/plant_storage_service.dart';
+import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
+import '../add_plant/add_plant_screen.dart';
 
-class PlantDetailScreen extends StatelessWidget {
+class PlantDetailScreen extends StatefulWidget {
   final Plant plant;
   const PlantDetailScreen({super.key, required this.plant});
 
   static const Color brandGreen = Color(0xFF286B47);
+
+  @override
+  State<PlantDetailScreen> createState() => _PlantDetailScreenState();
+}
+
+class _PlantDetailScreenState extends State<PlantDetailScreen> {
+  final storage = PlantStorageService();
+  final notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    notificationService.initialize();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,20 +90,9 @@ class PlantDetailScreen extends StatelessWidget {
                   IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    onPressed: () {},
+                    onPressed: () => _showEditDeleteMenu(context),
                     icon: const Icon(
-                      Icons.search,
-                      color: brandGreen,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.menu,
+                      Icons.more_vert,
                       color: brandGreen,
                       size: 24,
                     ),
@@ -191,11 +197,153 @@ class PlantDetailScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  // Watering Reminder Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _scheduleWateringReminder(),
+                      icon: const Icon(Icons.notifications_active, size: 20),
+                      label: const Text('Set Watering Reminder'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: brandGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showEditDeleteMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit, color: brandGreen),
+              title: const Text('Edit Plant'),
+              onTap: () {
+                Navigator.pop(context);
+                _navigateToEdit();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: AppColors.error),
+              title: const Text('Delete Plant'),
+              onTap: () {
+                Navigator.pop(context);
+                _confirmDelete();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToEdit() async {
+    final updatedPlant = await Navigator.push<Plant>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddPlantScreen(existingPlant: widget.plant),
+      ),
+    );
+
+    if (updatedPlant != null && mounted) {
+      await storage.updatePlant(updatedPlant);
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Plant updated successfully')),
+      );
+    }
+  }
+
+  void _confirmDelete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete plant?'),
+        content: Text('Remove "${widget.plant.name}" from your collection?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      await storage.deletePlant(widget.plant.id);
+      await notificationService.cancelWateringReminder(widget.plant.id);
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Plant deleted')),
+      );
+    }
+  }
+
+  void _scheduleWateringReminder() async {
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (selectedDate == null || !mounted) return;
+
+    final selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (selectedTime == null || !mounted) return;
+
+    final scheduledDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
+
+    await notificationService.scheduleWateringReminder(
+      plantId: widget.plant.id,
+      plantName: widget.plant.name,
+      scheduledTime: scheduledDateTime,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Reminder set for ${scheduledDateTime.toString()}'),
+        duration: const Duration(seconds: 3),
       ),
     );
   }

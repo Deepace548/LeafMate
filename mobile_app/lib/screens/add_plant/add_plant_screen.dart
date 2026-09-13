@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/plant.dart';
 import '../../services/plant_storage_service.dart';
+import '../../services/plant_api_service.dart';
 import '../../theme/app_colors.dart';
 
 // ==================== Plant catalog ====================
@@ -57,7 +58,8 @@ final List<Plant> plantCatalog = [
 ];
 
 class AddPlantScreen extends StatefulWidget {
-  const AddPlantScreen({super.key});
+  final Plant? existingPlant;
+  const AddPlantScreen({super.key, this.existingPlant});
 
   @override
   State<AddPlantScreen> createState() => _AddPlantScreenState();
@@ -68,6 +70,24 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
 
   Plant? _selected;
   bool _saving = false;
+  bool _searching = false;
+  List<Plant> _apiSearchResults = [];
+  final TextEditingController _searchController = TextEditingController();
+  final PlantApiService _apiService = PlantApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingPlant != null) {
+      _selected = widget.existingPlant;
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,9 +121,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     ),
                   ),
                   const Spacer(),
-                  const Text(
-                    'Add Plant',
-                    style: TextStyle(
+                  Text(
+                    widget.existingPlant != null ? 'Edit Plant' : 'Add Plant',
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: Colors.black,
@@ -157,6 +177,156 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
 
             const SizedBox(height: 70),
 
+            // ==================== SEARCH BAR ====================
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                width: double.infinity,
+                height: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search plant database...',
+                    hintStyle: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.grey,
+                    ),
+                    border: InputBorder.none,
+                    suffixIcon: _searching
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: brandGreen,
+                              ),
+                            ),
+                          )
+                        : IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: () => _searchPlants(),
+                          ),
+                  ),
+                  onSubmitted: (_) => _searchPlants(),
+                ),
+              ),
+            ),
+
+            // ==================== SEARCH RESULTS ====================
+            if (_apiSearchResults.isNotEmpty)
+              Container(
+                height: 150,
+                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _apiSearchResults.length,
+                  itemBuilder: (context, index) {
+                    final plant = _apiSearchResults[index];
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selected = plant;
+                          _apiSearchResults.clear();
+                          _searchController.clear();
+                        });
+                      },
+                      child: Container(
+                        width: 120,
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _selected?.id == plant.id
+                                ? brandGreen
+                                : Colors.grey.withOpacity(0.3),
+                            width: _selected?.id == plant.id ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(11),
+                              ),
+                              child: Image.network(
+                                plant.image,
+                                height: 80,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  height: 80,
+                                  color: AppColors.accent,
+                                  child: const Icon(
+                                    Icons.local_florist,
+                                    color: brandGreen,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(
+                                plant.name,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+            // ==================== OR DIVIDER ====================
+            if (_apiSearchResults.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: Colors.grey.withOpacity(0.3),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'OR',
+                        style: TextStyle(
+                          color: AppColors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: Colors.grey.withOpacity(0.3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: _apiSearchResults.isNotEmpty ? 16 : 0),
+
             // ==================== DROPDOWN ====================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -174,7 +344,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     hint: const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'What is the plant you want to add',
+                        'Or select from catalog',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.grey,
@@ -217,6 +387,8 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                     onChanged: (plant) {
                       setState(() {
                         _selected = plant;
+                        _apiSearchResults.clear();
+                        _searchController.clear();
                       });
                     },
                   ),
@@ -284,9 +456,9 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
 
     setState(() => _saving = true);
 
-    // Give it a UNIQUE id so multiple adds don't clash
-    final newPlant = Plant(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    // If editing, keep the original ID; if adding, create new ID
+    final plant = Plant(
+      id: widget.existingPlant?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       name: _selected!.name,
       type: _selected!.type,
       image: _selected!.image,
@@ -295,18 +467,38 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
       humidity: _selected!.humidity,
       overview: _selected!.overview,
       tips: _selected!.tips,
-      addedDate: DateTime.now(),
+      addedDate: widget.existingPlant?.addedDate ?? DateTime.now(),
     );
 
     try {
       final storage = PlantStorageService();
-      await storage.addPlant(newPlant);
+      if (widget.existingPlant != null) {
+        await storage.updatePlant(plant);
+      } else {
+        await storage.addPlant(plant);
+      }
     } catch (e) {
       debugPrint('Save failed: $e');
     }
 
     if (!mounted) return;
 
-    Navigator.pop(context);
+    Navigator.pop(context, plant);
+  }
+
+  Future<void> _searchPlants() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() => _searching = true);
+
+    final results = await _apiService.searchPlants(query);
+
+    if (mounted) {
+      setState(() {
+        _searching = false;
+        _apiSearchResults = results;
+      });
+    }
   }
 }

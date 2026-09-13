@@ -42,6 +42,15 @@ class PlantStorageService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updatePlant(Plant updatedPlant) async {
+    final index = _plants.indexWhere((p) => p.id == updatedPlant.id);
+    if (index != -1) {
+      _plants[index] = updatedPlant;
+      await _save();
+      notifyListeners();
+    }
+  }
+
   Future<void> clearAll() async {
     _plants.clear();
     await _save();
