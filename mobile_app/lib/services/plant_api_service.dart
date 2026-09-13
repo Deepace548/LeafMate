@@ -7,7 +7,7 @@ class PlantApiService {
   // Using Perenual API (free tier available)
   // You can get a free API key from https://perenual.com/
   static const String _baseUrl = 'https://perenual.com/api';
-  static const String _apiKey = 'YOUR_API_KEY_HERE'; // Replace with your actual API key
+  static const String _apiKey = 'sk-aq4V6aa62c2a79acc19826'; // Replace with your actual API key
   
   // Search for plants by name
   Future<List<Plant>> searchPlants(String query) async {
