@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../theme/app_colors.dart';
 import '../../services/auth_service.dart';
-import '../../services/social_auth_service.dart';
 import '../home/home_screen.dart';
 import 'registration_screen.dart';
 
@@ -20,11 +19,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _auth = AuthService();
-  final _socialAuth = SocialAuthService();
 
   bool _obscurePassword = true;
   bool _loading = false;
-  bool _socialLoading = false;
 
   @override
   void initState() {
@@ -99,54 +96,6 @@ class _LoginScreenState extends State<LoginScreen> {
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
       ),
-    );
-  }
-
-  // ==================== GOOGLE SOCIAL LOGIN ====================
-  Future<void> _onGoogleSignIn() async {
-    setState(() => _socialLoading = true);
-
-    final error = await _socialAuth.signInWithGoogle();
-
-    if (!mounted) return;
-    setState(() => _socialLoading = false);
-
-    if (error != null) {
-      _showSnack(error);
-      return;
-    }
-
-    _showSnack('Signed in with Google!');
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
-  }
-
-  // ==================== FACEBOOK SOCIAL LOGIN ====================
-  Future<void> _onFacebookSignIn() async {
-    setState(() => _socialLoading = true);
-
-    final error = await _socialAuth.signInWithFacebook();
-
-    if (!mounted) return;
-    setState(() => _socialLoading = false);
-
-    if (error != null) {
-      _showSnack(error);
-      return;
-    }
-
-    _showSnack('Signed in with Facebook!');
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
     );
   }
 
@@ -328,108 +277,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // ================= "OR" DIVIDER =================
-                Row(
-                  children: const [
-                    Expanded(
-                      child: Divider(
-                        color: Colors.white24,
-                        thickness: 1,
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Text(
-                        "Or continue with social media",
-                        style: TextStyle(
-                            color: Colors.white70, fontSize: 12),
-                      ),
-                    ),
-                    Expanded(
-                      child: Divider(
-                        color: Colors.white24,
-                        thickness: 1,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // ================= FACEBOOK =================
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _socialLoading ? null : _onFacebookSignIn,
-                    icon: _socialLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.blue,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.facebook,
-                            color: Colors.blue,
-                            size: 22,
-                          ),
-                    label: Text(
-                      _socialLoading ? "Connecting..." : "Continue with Facebook",
-                      style: const TextStyle(
-                          color: Colors.black87, fontSize: 14),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.white70,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // ================= GOOGLE =================
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _socialLoading ? null : _onGoogleSignIn,
-                    icon: _socialLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.red,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.g_mobiledata,
-                            color: Colors.red,
-                            size: 28,
-                          ),
-                    label: Text(
-                      _socialLoading ? "Connecting..." : "Continue with Google",
-                      style: const TextStyle(
-                          color: Colors.black87, fontSize: 14),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.white70,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                  ),
-                ),
 
                 const SizedBox(height: 40),
 

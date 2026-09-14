@@ -325,7 +325,7 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 ),
               ),
 
-            const SizedBox(height: _apiSearchResults.isNotEmpty ? 16 : 0),
+            SizedBox(height: _apiSearchResults.isNotEmpty ? 16 : 0),
 
             // ==================== DROPDOWN ====================
             Padding(

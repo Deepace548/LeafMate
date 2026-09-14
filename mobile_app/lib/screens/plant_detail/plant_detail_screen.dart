@@ -19,6 +19,8 @@ class PlantDetailScreen extends StatefulWidget {
 class _PlantDetailScreenState extends State<PlantDetailScreen> {
   final storage = PlantStorageService();
   final notificationService = NotificationService();
+  
+  static const Color brandGreen = Color(0xFF286B47);
 
   @override
   void initState() {
@@ -107,7 +109,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
                 children: [
                   Text(
-                    plant.name,
+                    widget.plant.name,
                     style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w700,
@@ -124,7 +126,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                     ),
                     padding: const EdgeInsets.all(16),
                     child: Image.asset(
-                      plant.image,
+                      widget.plant.image,
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const Center(
                         child: Icon(
@@ -151,17 +153,17 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       _overviewItem(
                         icon: Icons.wb_sunny_outlined,
                         title: 'Sunlight',
-                        value: plant.light,
+                        value: widget.plant.light,
                       ),
                       _overviewItem(
                         icon: Icons.water_drop_outlined,
                         title: 'Water',
-                        value: plant.water,
+                        value: widget.plant.water,
                       ),
                       _overviewItem(
                         icon: Icons.air,
                         title: 'Humidity',
-                        value: plant.humidity,
+                        value: widget.plant.humidity,
                       ),
                     ],
                   ),
@@ -189,7 +191,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      plant.overview,
+                      widget.plant.overview,
                       style: const TextStyle(
                         color: Color(0xFF6B7280),
                         height: 1.55,
@@ -239,7 +241,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit, color: brandGreen),
+              leading: Icon(Icons.edit, color: brandGreen),
               title: const Text('Edit Plant'),
               onTap: () {
                 Navigator.pop(context);

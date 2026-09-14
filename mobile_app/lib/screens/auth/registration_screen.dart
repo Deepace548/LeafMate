@@ -124,7 +124,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/images/leafmate_logo.jpeg',
+                      'assets/images/leafmate_logo.png',
                       width: 34,
                       height: 34,
                       fit: BoxFit.contain,
@@ -244,64 +244,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
 
                 const SizedBox(height: 30),
-
-                const Center(
-                  child: Text(
-                    "Or Register using social media",
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // ================= SOCIAL BUTTONS =================
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.facebook,
-                            color: Colors.blue, size: 22),
-                        label: const Text(
-                          "Facebook",
-                          style: TextStyle(
-                              color: Colors.black87, fontSize: 14),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          elevation: 0,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.g_mobiledata,
-                            color: Colors.red, size: 28),
-                        label: const Text(
-                          "Google",
-                          style: TextStyle(
-                              color: Colors.black87, fontSize: 14),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          elevation: 0,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
 
                 const SizedBox(height: 60),
 
